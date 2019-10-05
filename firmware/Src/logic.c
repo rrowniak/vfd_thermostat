@@ -193,6 +193,8 @@ static uint8_t tempToogle = 0;
 
 static void __display_temp(uint8_t t1, uint8_t t2)
 {
+    vfd_driver_clear();
+    
     if ((t1 < 100) && (t2 < 100)) {
         vfd_driver_print_left(t1);
         vfd_driver_print_right(t2);
@@ -350,6 +352,32 @@ void logic_init_selfcheck()
     LOG("Selftests finished");
 }
 
+static void __adjust_fan_speed(uint8_t chamber_t)
+{
+    uint8_t t1 = currentConfig.tempThreshold;
+    uint8_t t2 = currentConfig.tempThreshold + TEMP_DELTA_MAX;
+    
+    if (chamber_t < t1) {
+        return;
+    }
+
+    if (currentConfig.fanSpeed == CONF_FAN_SLOW) {
+        fan_driver_set_power(FAN_MIN);
+        return;
+    }
+
+    if (currentConfig.fanSpeed == CONF_FAN_FAST) {
+        fan_driver_set_power(FAN_MAX);
+        return;
+    }
+
+    // linear speed
+    float t = (chamber_t - t1) / (t2 - t1);
+    if (t > 1) t = 1.0; 
+
+    fan_driver_set_power(FAN_MIN + t * (FAN_MAX - FAN_MIN));
+}
+
 void logic_update()
 {
     uint32_t now_ms = HAL_GetTick();
@@ -366,15 +394,7 @@ void logic_update()
 
         LOG4("Readings [t1, t2, l]: ", ambient_t, chamber_t, l);
 
-        // fan drive logic
-        if (chamber_t > currentConfig.tempThreshold + TEMP_DELTA_MAX) {
-            fan_driver_set_power(100);
-        } else if (chamber_t > currentConfig.tempThreshold) {
-            fan_driver_set_power(50);
-        } else {
-            // turn off the fan
-            fan_driver_set_power(0);
-        }
+        __adjust_fan_speed(chamber_t);
     }
 
     // every 0.5 second

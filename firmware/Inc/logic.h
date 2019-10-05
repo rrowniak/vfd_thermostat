@@ -29,11 +29,14 @@
 #include "stm32f1xx_hal.h"
 
 #define VER_MAJOR 1
-#define VER_MINOR 4
+#define VER_MINOR 5
 
-#define BRIGHTNESS_LEV_0 20
-#define BRIGHTNESS_LEV_1 40
-#define BRIGHTNESS_LEV_2 60
+#define BRIGHTNESS_LEV_0 40
+#define BRIGHTNESS_LEV_1 60
+#define BRIGHTNESS_LEV_2 80
+
+#define FAN_MIN 40
+#define FAN_MAX 100
 
 #define TEMP_DELTA_MAX 30
 
